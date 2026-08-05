@@ -34,7 +34,21 @@ class TemplateBootstrapPluginTest {
 
         assertEquals(
             "example/android-template-canary",
-            replaceTokens("MatteoSomensi/android-template", replacements),
+            tokenReplacer(replacements)("MatteoSomensi/android-template"),
+        )
+    }
+
+    @Test
+    fun `internal marker cleanup preserves line endings and inline content`() {
+        val input =
+            "include(\":app\") // TEMPLATE_OPTIONAL_INLINE\r\n" +
+                "// TEMPLATE_OPTIONAL_MODULES_START\r\n" +
+                "include(\":feature\")\r\n" +
+                "// TEMPLATE_OPTIONAL_MODULES_END\r\n"
+
+        assertEquals(
+            "include(\":app\") // TEMPLATE_OPTIONAL_INLINE\r\ninclude(\":feature\")\r\n",
+            removeInternalMarkerLines(input),
         )
     }
 }

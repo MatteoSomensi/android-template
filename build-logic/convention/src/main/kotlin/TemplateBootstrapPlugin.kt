@@ -131,24 +131,25 @@ private fun ensureCleanWorkingTree(root: File) {
 private val textExtensions = setOf("kt", "kts", "xml", "md", "yml", "yaml", "toml", "properties", "json", "txt")
 
 private fun rewriteTextFiles(root: File, replacements: Map<String, String>) {
+    val replaceTokens = tokenReplacer(replacements)
     root.walkTopDown()
         .onEnter { it.name !in setOf(".git", ".gradle", "build") }
         .filter { it.isFile && it.extension in textExtensions }
         .forEach { file ->
             val original = file.readBootstrapText()
-            val rewritten = replaceTokens(original, replacements)
+            val rewritten = replaceTokens(original)
             if (rewritten != original) file.writeText(rewritten)
         }
 }
 
-internal fun replaceTokens(text: String, replacements: Map<String, String>): String {
-    if (replacements.isEmpty()) return text
+internal fun tokenReplacer(replacements: Map<String, String>): (String) -> String {
+    if (replacements.isEmpty()) return { it }
     val pattern =
         replacements.keys
             .sortedByDescending(String::length)
             .joinToString("|") { Regex.escape(it) }
             .toRegex()
-    return pattern.replace(text) { match -> replacements.getValue(match.value) }
+    return { text -> pattern.replace(text) { match -> replacements.getValue(match.value) } }
 }
 
 private fun movePackageDirectories(root: File, targetPath: String) {
@@ -230,7 +231,7 @@ private fun removeBootstrapInfrastructure(root: File) {
     if (readme.isFile) {
         readme.writeText(
             readme.readBootstrapText().replace(
-                Regex("(?s)<!-- TEMPLATE_BOOTSTRAP_START -->.*?<!-- TEMPLATE_BOOTSTRAP_END -->\\n*"),
+                Regex("(?s)<!-- TEMPLATE_BOOTSTRAP_START -->.*?<!-- TEMPLATE_BOOTSTRAP_END -->(?:\\r?\\n)*"),
                 "",
             ),
         )
@@ -239,13 +240,16 @@ private fun removeBootstrapInfrastructure(root: File) {
 
 private fun removeInternalMarkers(root: File) {
     listOf(File(root, "settings.gradle.kts"), File(root, "app/build.gradle.kts"))
-        .filter(File::isFile)
+        .filter { it.isFile && it.extension == "kts" }
         .forEach { file ->
             val original = file.readBootstrapText()
-            val cleaned = original.lineSequence().filterNot { "TEMPLATE_OPTIONAL_" in it }.joinToString("\n")
-            file.writeText(cleaned)
+            val cleaned = removeInternalMarkerLines(original)
+            if (cleaned != original) file.writeText(cleaned)
         }
 }
+
+internal fun removeInternalMarkerLines(text: String): String =
+    text.replace(Regex("(?m)^[\\t ]*// TEMPLATE_OPTIONAL_[A-Z_]+(?:\\r?\\n|$)"), "")
 
 private fun File.readBootstrapText(): String {
     check(length() <= MAX_BOOTSTRAP_TEXT_FILE_BYTES) {
