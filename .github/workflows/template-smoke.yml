@@ -35,9 +35,9 @@ jobs:
           -Ptemplate.preset=${{ matrix.preset }}
       - name: Assert cleanup
         run: |
-          ! rg 'com\.example\.androidtemplate|id\("template\.bootstrap"\)|bootstrapTemplate|template\.appName|TEMPLATE_' --glob '!**/build/**'
-          rg -F 'example/android-template-smoke' README.md
-          ! rg -F 'android-template-smoke-smoke' README.md
+          ! grep -R -E --exclude-dir=.git --exclude-dir=.gradle --exclude-dir=build 'com\.example\.androidtemplate|id\("template\.bootstrap"\)|bootstrapTemplate|template\.appName|TEMPLATE_' .
+          grep -F 'example/android-template-smoke' README.md
+          ! grep -F 'android-template-smoke-smoke' README.md
           test -f core/database/schemas/dev.smoke.generated.core.database.TemplateDatabase/1.json
           test ! -e core/database/schemas/com.example.androidtemplate.core.database.TemplateDatabase
           test ! -f .github/workflows/template-smoke.yml
