@@ -67,6 +67,7 @@ open class BootstrapTemplateTask : DefaultTask() {
         if (dryRun) return
 
         rewriteTextFiles(root, replacements)
+        sortKotlinImports(root)
         movePackageDirectories(root, packageName.replace('.', '/'))
         moveRoomSchemaDirectory(root, packageName)
         pruneCapabilities(root, capabilities)
@@ -161,6 +162,35 @@ internal fun tokenReplacer(replacements: Map<String, String>): (String) -> Strin
             .toRegex()
     return { text -> pattern.replace(text) { match -> replacements.getValue(match.value) } }
 }
+
+private fun sortKotlinImports(root: File) {
+    root.walkTopDown()
+        .onEnter { it.name !in setOf(".git", ".gradle", "build") }
+        .filter { it.isFile && it.extension == "kt" }
+        .forEach { file ->
+            val original = file.readBootstrapText()
+            val sorted = sortKotlinImportBlock(original)
+            if (sorted != original) file.writeText(sorted)
+        }
+}
+
+internal fun sortKotlinImportBlock(text: String): String =
+    Regex("(?m)^import [^\\r\\n]+(?:\\r?\\nimport [^\\r\\n]+)*").replace(text) { block ->
+        val lineSeparator = if ("\r\n" in block.value) "\r\n" else "\n"
+        block.value
+            .split(Regex("\\r?\\n"))
+            .sortedWith(compareBy<String>({ importGroup(it) }, { it }))
+            .joinToString(lineSeparator)
+    }
+
+private fun importGroup(importLine: String): Int =
+    when {
+        " as " in importLine -> 4
+        importLine.startsWith("import java.") -> 1
+        importLine.startsWith("import javax.") -> 2
+        importLine.startsWith("import kotlin.") -> 3
+        else -> 0
+    }
 
 private fun movePackageDirectories(root: File, targetPath: String) {
     root.walkTopDown()

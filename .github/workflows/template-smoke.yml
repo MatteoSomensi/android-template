@@ -41,4 +41,4 @@ jobs:
           test -f core/database/schemas/dev.smoke.generated.core.database.TemplateDatabase/1.json
           test ! -e core/database/schemas/com.example.androidtemplate.core.database.TemplateDatabase
           test ! -f .github/workflows/template-smoke.yml
-      - run: ./gradlew verifyModuleBoundaries testDebugUnitTest assembleDebug --no-daemon
+      - run: ./gradlew verifyModuleBoundaries ktlintCheck testDebugUnitTest assembleDebug --no-daemon

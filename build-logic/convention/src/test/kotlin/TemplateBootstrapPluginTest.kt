@@ -51,4 +51,23 @@ class TemplateBootstrapPluginTest {
             removeInternalMarkerLines(input),
         )
     }
+
+    @Test
+    fun `generated Kotlin imports are sorted after package replacement`() {
+        val input =
+            "package example\r\n\r\n" +
+                "import javax.inject.Inject\r\n" +
+                "import com.matteosomensi.feature.Route\r\n" +
+                "import com.github.library.Api\r\n" +
+                "import androidx.compose.runtime.Composable\r\n"
+
+        assertEquals(
+            "package example\r\n\r\n" +
+                "import androidx.compose.runtime.Composable\r\n" +
+                "import com.github.library.Api\r\n" +
+                "import com.matteosomensi.feature.Route\r\n" +
+                "import javax.inject.Inject\r\n",
+            sortKotlinImportBlock(input),
+        )
+    }
 }
