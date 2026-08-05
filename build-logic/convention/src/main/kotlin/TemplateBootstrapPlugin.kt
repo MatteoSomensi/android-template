@@ -3,6 +3,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.nio.file.Files
 
 private const val TEMPLATE_PACKAGE = "com.example.androidtemplate"
 private const val TEMPLATE_PACKAGE_PATH = "com/example/androidtemplate"
@@ -81,7 +82,10 @@ open class BootstrapTemplateTask : DefaultTask() {
         val stalePath =
             root.walkTopDown()
                 .onEnter { it.name !in setOf(".git", ".gradle", "build") }
-                .firstOrNull { it.name.contains(TEMPLATE_PACKAGE) }
+                .firstOrNull { path ->
+                    val relativePath = path.relativeTo(root).invariantSeparatorsPath
+                    relativePath.contains(TEMPLATE_PACKAGE) || relativePath.contains(TEMPLATE_PACKAGE_PATH)
+                }
         check(stalePath == null) { "Bootstrap left the template package in ${stalePath?.relativeTo(root)}." }
         logger.lifecycle("Bootstrap complete. Run ./gradlew qualityGate before committing.")
     }
@@ -182,7 +186,7 @@ private fun moveRoomSchemaDirectory(root: File, packageName: String) {
     if (!source.isDirectory) return
     val target = File(schemas, "$packageName.core.database.TemplateDatabase")
     check(!target.exists()) { "Room schema target already exists: ${target.relativeTo(root)}" }
-    check(source.renameTo(target)) { "Could not rename Room schema directory to ${target.relativeTo(root)}" }
+    Files.move(source.toPath(), target.toPath())
 }
 
 private data class Capability(val name: String, val projectPath: String, val directory: String)
