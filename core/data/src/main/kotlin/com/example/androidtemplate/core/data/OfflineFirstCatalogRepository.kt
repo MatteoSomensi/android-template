@@ -27,7 +27,7 @@ class OfflineFirstCatalogRepository
         @OptIn(ExperimentalPagingApi::class)
         private val pager =
             Pager(
-                config = PagingConfig(pageSize = 20),
+                config = PagingConfig(pageSize = 20, enablePlaceholders = false),
                 remoteMediator = CatalogRemoteMediator(database, dao, network),
                 pagingSourceFactory = dao::pagingSource,
             )

@@ -10,6 +10,7 @@ import com.example.androidtemplate.core.database.CatalogEntity
 import com.example.androidtemplate.core.database.TemplateDatabase
 import com.example.androidtemplate.core.database.asEntity
 import com.example.androidtemplate.core.network.CatalogNetworkDataSource
+import kotlinx.coroutines.CancellationException
 
 @OptIn(ExperimentalPagingApi::class)
 class CatalogRemoteMediator(
@@ -31,6 +32,8 @@ class CatalogRemoteMediator(
                 dao.upsertAll(items.map { it.asEntity() })
             }
             MediatorResult.Success(endOfPaginationReached = items.size < state.config.pageSize)
+        } catch (cancellation: CancellationException) {
+            throw cancellation
         } catch (error: Exception) {
             MediatorResult.Error(error)
         }

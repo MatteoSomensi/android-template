@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -32,7 +33,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import com.example.androidtemplate.core.model.CatalogItem
 
 @Composable
@@ -42,7 +46,7 @@ fun CatalogListRoute(
 ) {
     val pagingItems = viewModel.items.collectAsLazyPagingItems()
     CatalogListScreen(
-        items = pagingItems.itemSnapshotList.items,
+        items = pagingItems,
         onItemClick = onItemClick,
     )
 }
@@ -50,9 +54,45 @@ fun CatalogListRoute(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CatalogListScreen(
+    items: LazyPagingItems<CatalogItem>,
+    onItemClick: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    CatalogListLayout(
+        itemCount = items.itemCount,
+        itemAt = items::get,
+        itemKey = items.itemKey(CatalogItem::id),
+        itemContentType = items.itemContentType(),
+        onItemClick = onItemClick,
+        modifier = modifier,
+    )
+}
+
+@Composable
+fun CatalogListScreen(
     items: List<CatalogItem>,
     onItemClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
+) {
+    CatalogListLayout(
+        itemCount = items.size,
+        itemAt = items::get,
+        itemKey = { index -> items[index].id },
+        itemContentType = { CatalogItem::class },
+        onItemClick = onItemClick,
+        modifier = modifier,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CatalogListLayout(
+    itemCount: Int,
+    itemAt: (Int) -> CatalogItem?,
+    itemKey: (Int) -> Any,
+    itemContentType: (Int) -> Any?,
+    onItemClick: (Long) -> Unit,
+    modifier: Modifier,
 ) {
     Scaffold(
         modifier = modifier,
@@ -65,12 +105,17 @@ fun CatalogListScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(items, key = CatalogItem::id) { item ->
-                Card(modifier = Modifier.fillMaxWidth().clickable { onItemClick(item.id) }) {
-                    ListItem(
-                        headlineContent = { Text(item.title) },
-                        supportingContent = { Text(item.summary) },
-                    )
+            items(count = itemCount, key = itemKey, contentType = itemContentType) { index ->
+                val item = itemAt(index)
+                if (item == null) {
+                    Card(modifier = Modifier.fillMaxWidth().height(88.dp)) {}
+                } else {
+                    Card(modifier = Modifier.fillMaxWidth().clickable { onItemClick(item.id) }) {
+                        ListItem(
+                            headlineContent = { Text(item.title) },
+                            supportingContent = { Text(item.summary) },
+                        )
+                    }
                 }
             }
         }

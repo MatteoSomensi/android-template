@@ -21,7 +21,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        deepLink.value = intent?.data
+        deepLink.value =
+            if (savedInstanceState?.getBoolean(DEEP_LINK_STATE_INITIALIZED) == true) {
+                savedInstanceState.getString(PENDING_DEEP_LINK)?.let(Uri::parse)
+            } else {
+                intent?.data
+            }
         enableEdgeToEdge()
         setContent {
             TemplateAppTheme {
@@ -36,7 +41,18 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        setIntent(intent)
         deepLink.value = intent.data
+        setIntent(intent)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean(DEEP_LINK_STATE_INITIALIZED, true)
+        deepLink.value?.let { outState.putString(PENDING_DEEP_LINK, it.toString()) }
+        super.onSaveInstanceState(outState)
+    }
+
+    private companion object {
+        const val DEEP_LINK_STATE_INITIALIZED = "deep_link_state_initialized"
+        const val PENDING_DEEP_LINK = "pending_deep_link"
     }
 }

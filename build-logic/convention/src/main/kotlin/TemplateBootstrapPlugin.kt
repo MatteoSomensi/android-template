@@ -76,6 +76,9 @@ open class BootstrapTemplateTask : DefaultTask() {
 
     private fun value(property: String, prompt: String, default: String): String {
         project.findProperty(property)?.toString()?.takeIf(String::isNotBlank)?.let { return it }
+        check(!System.getenv("CI").equals("true", ignoreCase = true)) {
+            "$property is required in CI. Pass it with -P$property=<value>."
+        }
         val console = System.console()
         val answer =
             if (console != null) {
