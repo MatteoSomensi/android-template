@@ -67,6 +67,7 @@ open class BootstrapTemplateTask : DefaultTask() {
 
         rewriteTextFiles(root, replacements)
         movePackageDirectories(root, packageName.replace('.', '/'))
+        moveRoomSchemaDirectory(root, packageName)
         pruneCapabilities(root, capabilities)
         removeBootstrapInfrastructure(root)
         removeInternalMarkers(root)
@@ -77,6 +78,11 @@ open class BootstrapTemplateTask : DefaultTask() {
                 .filter { it.isFile && it.extension in textExtensions }
                 .firstOrNull { file -> staleTokens.any(file.readBootstrapText()::contains) }
         check(staleFile == null) { "Bootstrap left internal template references in ${staleFile?.relativeTo(root)}." }
+        val stalePath =
+            root.walkTopDown()
+                .onEnter { it.name !in setOf(".git", ".gradle", "build") }
+                .firstOrNull { it.name.contains(TEMPLATE_PACKAGE) }
+        check(stalePath == null) { "Bootstrap left the template package in ${stalePath?.relativeTo(root)}." }
         logger.lifecycle("Bootstrap complete. Run ./gradlew qualityGate before committing.")
     }
 
@@ -168,6 +174,15 @@ private fun movePackageDirectories(root: File, targetPath: String) {
                 .filter { it.isDirectory && it.list().isNullOrEmpty() }
                 .forEach(File::delete)
         }
+}
+
+private fun moveRoomSchemaDirectory(root: File, packageName: String) {
+    val schemas = File(root, "core/database/schemas")
+    val source = File(schemas, "$TEMPLATE_PACKAGE.core.database.TemplateDatabase")
+    if (!source.isDirectory) return
+    val target = File(schemas, "$packageName.core.database.TemplateDatabase")
+    check(!target.exists()) { "Room schema target already exists: ${target.relativeTo(root)}" }
+    check(source.renameTo(target)) { "Could not rename Room schema directory to ${target.relativeTo(root)}" }
 }
 
 private data class Capability(val name: String, val projectPath: String, val directory: String)
