@@ -5,6 +5,13 @@ plugins {
 
 android {
     namespace = "com.example.androidtemplate.core.database"
+    testOptions {
+        managedDevices.localDevices.create("pixel2Api35") {
+            device = "Pixel 2"
+            sdkVersion = 35
+            systemImageSource = "aosp"
+        }
+    }
 }
 
 ksp { arg("room.schemaLocation", "$projectDir/schemas") }
