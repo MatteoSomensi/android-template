@@ -86,13 +86,14 @@ fun CatalogListScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+@Suppress("LongParameterList")
 private fun CatalogListLayout(
     itemCount: Int,
     itemAt: (Int) -> CatalogItem?,
     itemKey: (Int) -> Any,
     itemContentType: (Int) -> Any?,
     onItemClick: (Long) -> Unit,
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
