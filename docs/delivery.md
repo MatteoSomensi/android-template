@@ -8,10 +8,12 @@ tests run weekly and on demand to keep the normal feedback loop bounded.
 
 ## Main branch policy
 
-Protect `main` with pull requests, one code-owner approval, resolved review conversations, linear
-history, and up-to-date required checks. The required pull-request checks are `static-analysis`,
-`unit-and-build`, `screenshots`, `wrapper-validation`, and dependency `review`. Direct pushes and
-force pushes should remain disabled after the initial repository bootstrap.
+Protect `main` with pull requests, resolved review conversations, linear history, and up-to-date
+required checks. The required pull-request checks are `static-analysis`, `unit-and-build`,
+`screenshots`, `wrapper-validation`, and dependency `review`. Direct pushes and force pushes should
+remain disabled after the initial repository bootstrap. A single-maintainer repository uses zero
+required GitHub approvals to avoid a self-approval deadlock; raise the count to one as soon as an
+independent reviewer is added.
 
 ## Release setup
 
