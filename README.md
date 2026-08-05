@@ -9,19 +9,35 @@ Navigation 3 UI, testing infrastructure, and guarded CI/CD.
 <!-- TEMPLATE_BOOTSTRAP_START -->
 ## Create a project
 
-Use this repository as a GitHub Template, clone the generated repository, then run:
+1. Select **Use this template** and create a new repository, or use GitHub CLI:
 
-```bash
-./gradlew bootstrapTemplate --no-configuration-cache
-```
+   ```bash
+   gh repo create owner/my-app \
+     --template MatteoSomensi/android-template \
+     --private \
+     --clone
+   cd my-app
+   ```
+
+2. Ensure JDK 21 and an Android SDK are available, then run the one-time bootstrap:
+
+   ```bash
+   ./gradlew bootstrapTemplate --no-configuration-cache
+   ```
 
 The wizard asks for the app name, package, repository, deep-link scheme, and capability preset. It
 validates the inputs, renames source packages and delivery metadata, removes unselected modules,
-checks for stale placeholders, and removes itself. Review the resulting diff and run:
+checks for stale placeholders, and removes itself.
 
-```bash
-./gradlew qualityGate
-```
+3. Review the generated diff and run the first verification build:
+
+   ```bash
+   ./gradlew qualityGate
+   ./gradlew :app:bundleRelease
+   ```
+
+4. Commit the generated project and push it to the repository created in step 1. The first push to
+   `main` starts CI; run **Device tests** manually from GitHub Actions before accepting the baseline.
 
 For automation, pass properties explicitly:
 

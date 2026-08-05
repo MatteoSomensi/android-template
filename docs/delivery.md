@@ -6,6 +6,13 @@ Pull requests run independent jobs for architecture/static analysis, unit/build 
 verification, Gradle Wrapper validation, dependency review, and bootstrap smoke tests. Managed-device
 tests run weekly and on demand to keep the normal feedback loop bounded.
 
+## Main branch policy
+
+Protect `main` with pull requests, one code-owner approval, resolved review conversations, linear
+history, and up-to-date required checks. The required pull-request checks are `static-analysis`,
+`unit-and-build`, `screenshots`, `wrapper-validation`, and dependency `review`. Direct pushes and
+force pushes should remain disabled after the initial repository bootstrap.
+
 ## Release setup
 
 The release workflow is inert until the repository variable `RELEASE_ENABLED` is set to `true`.
