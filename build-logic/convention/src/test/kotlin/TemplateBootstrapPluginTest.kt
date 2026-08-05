@@ -1,0 +1,26 @@
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
+import org.junit.Test
+
+class TemplateBootstrapPluginTest {
+    @Test
+    fun `standard preset keeps production defaults`() {
+        assertEquals(setOf("sync", "benchmark", "roborazzi"), resolveCapabilities("standard", null))
+    }
+
+    @Test
+    fun `explicit capabilities override preset`() {
+        assertEquals(setOf("firebase", "auth"), resolveCapabilities("minimal", "firebase,auth"))
+    }
+
+    @Test
+    fun `auth requires firebase`() {
+        assertThrows(IllegalArgumentException::class.java) { resolveCapabilities("standard", "auth") }
+    }
+
+    @Test
+    fun `app name becomes a safe identifier`() {
+        assertEquals("MyGreatApp", "My great-app".toPascalIdentifier())
+        assertEquals("App42", "42".toPascalIdentifier())
+    }
+}

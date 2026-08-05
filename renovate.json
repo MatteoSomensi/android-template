@@ -1,0 +1,21 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "schedule": ["before 6am on monday"],
+  "labels": ["dependencies"],
+  "automerge": false,
+  "packageRules": [
+    {
+      "groupName": "Kotlin toolchain",
+      "matchPackageNames": ["org.jetbrains.kotlin:**", "com.google.devtools.ksp"]
+    },
+    {
+      "groupName": "AndroidX and Compose",
+      "matchPackageNames": ["androidx.**"]
+    },
+    {
+      "groupName": "GitHub Actions",
+      "matchManagers": ["github-actions"]
+    }
+  ]
+}
