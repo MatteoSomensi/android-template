@@ -31,6 +31,7 @@ android {
             device = "Pixel 2"
             sdkVersion = 35
             systemImageSource = "aosp"
+            testedAbi = "x86_64"
         }
     }
 }

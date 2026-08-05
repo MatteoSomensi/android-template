@@ -10,6 +10,7 @@ android {
             device = "Pixel 2"
             sdkVersion = 35
             systemImageSource = "aosp"
+            testedAbi = "x86_64"
         }
     }
 }
@@ -23,6 +24,7 @@ dependencies {
     implementation(libs.room.paging)
     ksp(libs.room.compiler)
     androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.room.testing)
 }
