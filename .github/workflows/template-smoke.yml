@@ -30,11 +30,13 @@ jobs:
           ./gradlew bootstrapTemplate --no-daemon --no-configuration-cache
           -Ptemplate.appName="Smoke Test"
           -Ptemplate.packageName=dev.smoke.generated
-          -Ptemplate.repository=example/smoke-test
+          -Ptemplate.repository=example/android-template-smoke
           -Ptemplate.deepLinkScheme=smoke
           -Ptemplate.preset=${{ matrix.preset }}
       - name: Assert cleanup
         run: |
-          ! rg 'com\.example\.androidtemplate|id\("template\.bootstrap"\)' --glob '!**/build/**'
+          ! rg 'com\.example\.androidtemplate|id\("template\.bootstrap"\)|bootstrapTemplate|template\.appName|TEMPLATE_' --glob '!**/build/**'
+          rg -F 'example/android-template-smoke' README.md
+          ! rg -F 'android-template-smoke-smoke' README.md
           test ! -f .github/workflows/template-smoke.yml
       - run: ./gradlew verifyModuleBoundaries testDebugUnitTest assembleDebug --no-daemon

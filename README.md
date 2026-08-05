@@ -6,6 +6,7 @@ An opinionated, production-oriented Android starter for scalable Compose applica
 a granular multi-module architecture, deterministic offline-first reference feature, adaptive
 Navigation 3 UI, testing infrastructure, and guarded CI/CD.
 
+<!-- TEMPLATE_BOOTSTRAP_START -->
 ## Create a project
 
 Use this repository as a GitHub Template, clone the generated repository, then run:
@@ -36,6 +37,7 @@ For automation, pass properties explicitly:
 Presets are `minimal`, `standard`, and `full`; `template.features` accepts an explicit comma-separated
 set from `firebase,auth,sync,widget,appfunctions,benchmark,roborazzi`. Authentication requires Firebase.
 Use `-Ptemplate.dryRun=true` to validate and preview a configuration without writing files.
+<!-- TEMPLATE_BOOTSTRAP_END -->
 
 ## Architecture
 

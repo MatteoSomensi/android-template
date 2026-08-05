@@ -23,4 +23,18 @@ class TemplateBootstrapPluginTest {
         assertEquals("MyGreatApp", "My great-app".toPascalIdentifier())
         assertEquals("App42", "42".toPascalIdentifier())
     }
+
+    @Test
+    fun `replacement output is not processed a second time`() {
+        val replacements =
+            linkedMapOf(
+                "MatteoSomensi/android-template" to "example/android-template-canary",
+                "android-template" to "android-template-canary",
+            )
+
+        assertEquals(
+            "example/android-template-canary",
+            replaceTokens("MatteoSomensi/android-template", replacements),
+        )
+    }
 }

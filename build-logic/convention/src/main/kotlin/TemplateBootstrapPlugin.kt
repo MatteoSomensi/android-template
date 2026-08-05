@@ -6,6 +6,7 @@ import java.io.File
 
 private const val TEMPLATE_PACKAGE = "com.example.androidtemplate"
 private const val TEMPLATE_PACKAGE_PATH = "com/example/androidtemplate"
+private const val MAX_BOOTSTRAP_TEXT_FILE_BYTES = 10L * 1024 * 1024
 
 class TemplateBootstrapPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -68,9 +69,14 @@ open class BootstrapTemplateTask : DefaultTask() {
         movePackageDirectories(root, packageName.replace('.', '/'))
         pruneCapabilities(root, capabilities)
         removeBootstrapInfrastructure(root)
-        check(root.walkTopDown().filter(File::isFile).none { file ->
-            file.extension in textExtensions && file.readText().contains(TEMPLATE_PACKAGE)
-        }) { "Bootstrap left template package references behind." }
+        removeInternalMarkers(root)
+        val staleTokens = listOf(TEMPLATE_PACKAGE, "bootstrapTemplate", "template.appName", "TEMPLATE_")
+        val staleFile =
+            root.walkTopDown()
+                .onEnter { it.name !in setOf(".git", ".gradle", "build") }
+                .filter { it.isFile && it.extension in textExtensions }
+                .firstOrNull { file -> staleTokens.any(file.readBootstrapText()::contains) }
+        check(staleFile == null) { "Bootstrap left internal template references in ${staleFile?.relativeTo(root)}." }
         logger.lifecycle("Bootstrap complete. Run ./gradlew qualityGate before committing.")
     }
 
@@ -129,10 +135,20 @@ private fun rewriteTextFiles(root: File, replacements: Map<String, String>) {
         .onEnter { it.name !in setOf(".git", ".gradle", "build") }
         .filter { it.isFile && it.extension in textExtensions }
         .forEach { file ->
-            val original = file.readText()
-            val rewritten = replacements.entries.fold(original) { text, (old, new) -> text.replace(old, new) }
+            val original = file.readBootstrapText()
+            val rewritten = replaceTokens(original, replacements)
             if (rewritten != original) file.writeText(rewritten)
         }
+}
+
+internal fun replaceTokens(text: String, replacements: Map<String, String>): String {
+    if (replacements.isEmpty()) return text
+    val pattern =
+        replacements.keys
+            .sortedByDescending(String::length)
+            .joinToString("|") { Regex.escape(it) }
+            .toRegex()
+    return pattern.replace(text) { match -> replacements.getValue(match.value) }
 }
 
 private fun movePackageDirectories(root: File, targetPath: String) {
@@ -210,4 +226,30 @@ private fun removeBootstrapInfrastructure(root: File) {
     File(root, "build-logic/convention/src/main/kotlin/TemplateBootstrapPlugin.kt").delete()
     File(root, "build-logic/convention/src/test/kotlin/TemplateBootstrapPluginTest.kt").delete()
     File(root, ".github/workflows/template-smoke.yml").delete()
+    val readme = File(root, "README.md")
+    if (readme.isFile) {
+        readme.writeText(
+            readme.readBootstrapText().replace(
+                Regex("(?s)<!-- TEMPLATE_BOOTSTRAP_START -->.*?<!-- TEMPLATE_BOOTSTRAP_END -->\\n*"),
+                "",
+            ),
+        )
+    }
+}
+
+private fun removeInternalMarkers(root: File) {
+    listOf(File(root, "settings.gradle.kts"), File(root, "app/build.gradle.kts"))
+        .filter(File::isFile)
+        .forEach { file ->
+            val original = file.readBootstrapText()
+            val cleaned = original.lineSequence().filterNot { "TEMPLATE_OPTIONAL_" in it }.joinToString("\n")
+            file.writeText(cleaned)
+        }
+}
+
+private fun File.readBootstrapText(): String {
+    check(length() <= MAX_BOOTSTRAP_TEXT_FILE_BYTES) {
+        "Bootstrap cannot safely rewrite ${invariantSeparatorsPath}: text file exceeds 10 MiB."
+    }
+    return readText()
 }
